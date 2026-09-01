@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Система «Карьерный навигатор»</title>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+    <style>
+        :root {
+            --bg: #f4f6f8;
+            --card-bg: #ffffff;
+            --primary: #1a56db;
+            --primary-hover: #1e429f;
+            --text: #1f2a37;
+            --text-muted: #6b7280;
+            --border: #e5e7eb;
+            --success: #0e9f6e;
+            --danger: #e02424;
+        }
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: Arial, sans-serif;
+            line-height: 1.5;
+            margin: 0;
+            padding: 24px;
+        }
+        .container { max-width: 960px; margin: 0 auto; }
+
+        header {
+            background: #ffffff;
+            border: 1px solid var(--border);
+            border-top: 4px solid var(--primary);
+            padding: 20px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        header h1 { font-size: 20px; margin: 0 0 6px 0; color: #111827; }
+        header p { color: var(--text-muted); font-size: 14px; margin: 0; }
+
+        .nav-tabs { display: flex; gap: 4px; margin-bottom: 20px; border-bottom: 1px solid var(--border); }
+        .nav-tabs button {
+            background: #e5e7eb;
+            border: 1px solid var(--border);
+            border-bottom: none;
+            color: #374151;
+            padding: 10px 18px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+        }
+        .nav-tabs button.active {
+            background: var(--card-bg);
+            border-color: var(--border);
+            border-top: 2px solid var(--primary);
+            color: var(--primary);
+            font-weight: 600;
+            margin-bottom: -1px;
+            padding-bottom: 11px;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            padding: 20px;
+            margin-bottom: 16px;
+        }
+        .inner-block {
+            background: #f9fafb;
+            border: 1px solid #e5e7eb;
+            padding: 14px;
+            margin-top: 10px;
+        }
+
+        .badge {
+            display: inline-block;
+            background: #f3f4f6;
+            color: #374151;
+            font-size: 12px;
+            padding: 3px 8px;
+            margin: 2px 4px 2px 0;
+            border: 1px solid #d1d5db;
+        }
+        .badge-primary { background: #ebf5ff; color: #1e429f; border-color: #a4cafe; }
+        .badge-success { background: #def7ec; color: #03543f; border-color: #84e1bc; }
+        .badge-danger { background: #fde8e8; color: #9b1c1c; border-color: #f8b4b4; }
+
+        input {
+            padding: 9px 12px;
+            border: 1px solid #d1d5db;
+            font-size: 14px;
+            width: 100%;
+            max-width: 420px;
+            margin-bottom: 16px;
+            display: block;
+            box-sizing: border-box;
+        }
+
+        .btn-action {
+            background: var(--primary);
+            color: #ffffff;
+            cursor: pointer;
+            border: none;
+            padding: 9px 16px;
+            font-size: 14px;
+            font-weight: 500;
+        }
+        .btn-action:hover { background: var(--primary-hover); }
+
+        .btn-outline {
+            background: transparent;
+            color: var(--primary);
+            border: 1px solid var(--primary);
+            cursor: pointer;
+            padding: 4px 10px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        .btn-outline:hover { background: #ebf5ff; }
+
+        .btn-link {
+            background: none;
+            border: none;
+            color: var(--primary);
+            text-decoration: underline;
+            cursor: pointer;
+            padding: 0;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .test-option-check {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            padding: 10px 14px;
+            margin: 6px 0;
+            background: #ffffff;
+            border: 1px solid #d1d5db;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.15s;
+        }
+        .test-option-check:hover { background: #f3f4f6; }
+        .test-option-check.selected {
+            border-color: var(--primary);
+            background: #ebf5ff;
+            color: var(--primary);
+            font-weight: 500;
+        }
+        .test-option-check input[type="checkbox"] {
+            width: auto;
+            margin: 3px 0 0 0;
+            cursor: pointer;
+        }
+
+        .progress-bar-container {
+            background: #e5e7eb;
+            height: 10px;
+            width: 100%;
+            margin-top: 4px;
+            margin-bottom: 12px;
+        }
+        .progress-bar {
+            background: var(--primary);
+            height: 100%;
+        }
+
+        .text-muted { color: var(--text-muted); font-size: 13px; }
+        .text-success { color: var(--success); font-weight: 600; }
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+        @media (max-width: 768px) { .grid-2 { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+<div id="app" class="container">
+    <header>
+        <div>
+            <h1>Информационная система «Карьерный навигатор»</h1>
+            <p>"Карьерный навигатор" - это веб-ресурс, который объединяет абитуриентов, вузы и работодателей с целью упростить процесс выбора образовательной траектории и трудоустройства.</p>
+        </div>
+        <div v-if="user != null">
+            <span style="margin-right: 15px;">Привет, <b>{{ user.name }}</b>!</span>
+            <button class="btn-outline" v-on:click="logout">Выйти</button>
+        </div>
+    </header>
+
+    <div class="nav-tabs">
+        <button v-bind:class="{ active: currentTab === 'professions' }" v-on:click="currentTab = 'professions'">Реестр профессий</button>
+        <button v-bind:class="{ active: currentTab === 'universities' }" v-on:click="currentTab = 'universities'">Программы вузов</button>
+        <button v-bind:class="{ active: currentTab === 'test' }" v-on:click="currentTab = 'test'">Профориентация</button>
+        <button v-bind:class="{ active: currentTab === 'account' }" v-on:click="currentTab = 'account'">Личный кабинет</button>
+    </div>
+
+    <div v-if="currentTab === 'professions'">
+        <input type="text" v-model="searchQuery" v-on:input="fetchProfessions" placeholder="Поиск по названию или навыку...">
+
+        <div v-for="prof in professions" v-bind:key="prof.id" class="card">
+            <div style="display: flex; justify-content: space-between; align-items: baseline; border-bottom: 1px solid #f3f4f6; padding-bottom: 8px; margin-bottom: 10px;">
+                <h2 style="font-size: 17px; margin: 0;">{{ prof.title }}</h2>
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <span class="text-success">Средний доход: {{ prof.average_salary }} руб./мес.</span>
+                    <button v-if="user != null" class="btn-outline" v-on:click="toggleFavoriteProf(prof.id)">
+                        <span v-if="isFavoriteProf(prof.id)">В избранном</span>
+                        <span v-if="!isFavoriteProf(prof.id)">Сохранить</span>
+                    </button>
+                </div>
+            </div>
+
+            <p style="margin: 0 0 10px 0; font-size: 14px;">{{ prof.description }}</p>
+
+            <div style="margin-bottom: 12px;">
+                <span class="text-muted" style="font-weight: 600;">Требуемые компетенции:</span><br>
+                <span v-for="comp in prof.required_competencies.split(', ')" v-bind:key="comp" class="badge">{{ comp }}</span>
+            </div>
+
+            <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #f3f4f6; padding-top: 10px;">
+                <span class="text-muted">Активных вакансий на рынке: {{ prof.vacancies_count }}</span>
+                <button class="btn-link" v-on:click="toggleDetails(prof.id)">
+                    <span v-if="expandedProfId === prof.id">Скрыть траекторию подготовки</span>
+                    <span v-if="expandedProfId !== prof.id">Показать вузы и вакансии работодателей</span>
+                </button>
+            </div>
+
+            <div v-if="expandedProfId === prof.id && profDetails != null" style="margin-top: 15px;">
+                <div class="grid-2">
+                    <div class="inner-block">
+                        <div style="font-weight: 600; font-size: 14px; margin-bottom: 8px; color: var(--primary);">Программы высшего образования:</div>
+                        <div v-if="profDetails.educational_programs.length == 0" class="text-muted">Данные обновляются</div>
+
+                        <div v-for="prog in profDetails.educational_programs" v-bind:key="prog.id" style="margin-bottom: 10px; padding-bottom: 6px; border-bottom: 1px solid #e5e7eb;">
+                            <div style="font-weight: 600; font-size: 13px; display: flex; justify-content: space-between;">
+                                <span>{{ prog.university_name }} (г. {{ prog.city }})</span>
+                                <button v-if="user != null" class="btn-outline" v-on:click="toggleFavorite(prog.id)">
+                                    <span v-if="isFavorite(prog.id)">В избранном</span>
+                                    <span v-if="!isFavorite(prog.id)">Сохранить</span>
+                                </button>
+                            </div>
+                            <div style="font-size: 13px; margin-top: 4px;">
+                                {{ prog.title }}
+                                <span v-if="prog.is_primary == 0" class="badge" style="font-size: 11px;">Смежный профиль</span>
+                            </div>
+                            <div class="text-muted">Проходной балл: {{ prog.passing_score }} | {{ prog.ege_requirements }}</div>
+                        </div>
+                    </div>
+
+                    <div class="inner-block">
+                        <div style="font-weight: 600; font-size: 14px; margin-bottom: 8px;">Вакансии работодателей:</div>
+                        <div v-if="profDetails.vacancies.length == 0" class="text-muted">Нет открытых вакансий</div>
+
+                        <div v-for="vac in profDetails.vacancies" v-bind:key="vac.id" style="margin-bottom: 10px; padding-bottom: 6px; border-bottom: 1px solid #e5e7eb;">
+                            <div style="font-weight: 600; font-size: 13px;">{{ vac.title }}</div>
+                            <div style="font-size: 13px;">{{ vac.employer_name }} ({{ vac.industry }})</div>
+                            <div class="text-success" style="font-size: 13px;">Оклад: {{ vac.salary_offered }} руб.</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div v-if="currentTab === 'universities'">
+        <div v-for="uni in universities" v-bind:key="uni.id" class="card">
+            <h2 style="font-size: 17px; margin: 0 0 12px 0;">{{ uni.name }} (г. {{ uni.city }})</h2>
+            <div class="text-muted" style="margin-bottom: 8px; font-weight: 600;">Направления подготовки и доступные квалификации:</div>
+
+            <div v-for="prog in uni.programs" v-bind:key="prog.id" class="inner-block">
+                <div style="display: flex; justify-content: space-between; align-items: baseline;">
+                    <strong style="font-size: 14px;">{{ prog.title }}</strong>
+                    <div style="display: flex; gap: 10px; align-items: center;">
+                        <span style="font-size: 13px;">Проходной балл: <b>{{ prog.passing_score }}</b></span>
+                        <button v-if="user != null" class="btn-outline" v-on:click="toggleFavorite(prog.id)">
+                            <span v-if="isFavorite(prog.id)">В избранном</span>
+                            <span v-if="!isFavorite(prog.id)">Сохранить</span>
+                        </button>
+                    </div>
+                </div>
+                <div style="margin: 4px 0;" class="text-muted">Вступительные экзамены: {{ prog.ege_requirements }}</div>
+
+                <div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid #e5e7eb; font-size: 13px;">
+                    <span style="font-weight: 600;">Возможные квалификации выпускника:</span><br>
+                    <span
+                            v-for="p in prog.professions"
+                            v-bind:key="p.id"
+                            v-bind:class="{'badge': true, 'badge-primary': p.is_primary == true}"
+                            style="cursor: pointer;"
+                            v-on:click="showProfFromUni(p.title)"
+                    >
+                        <span v-if="p.is_primary == true">{{ p.title }} (профиль)</span>
+                        <span v-if="p.is_primary == false">{{ p.title }}</span>
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div v-if="currentTab === 'test'">
+        <div v-if="trajectoryResult == null" class="card">
+            <h2 style="font-size: 17px; margin-top: 0;">Комплексная профориентационная диагностика</h2>
+            <p class="text-muted" style="margin-bottom: 20px;">Ответьте на вопросы. Вы можете выбрать один или несколько вариантов.</p>
+
+            <div v-for="(q, idx) in questions" v-bind:key="q.id" style="margin-bottom: 24px;">
+                <p style="margin: 0 0 4px 0; font-size: 14px;"><strong>Вопрос {{ idx + 1 }}. {{ q.question }}</strong></p>
+                <div v-if="q.hint != null" class="text-muted" style="margin-bottom: 8px; font-size: 12px;">{{ q.hint }}</div>
+
+                <label
+                        v-for="opt in q.options"
+                        v-bind:key="opt.id"
+                        class="test-option-check"
+                        v-bind:class="{ selected: selectedOptionsList.includes(opt.id) }"
+                >
+                    <input type="checkbox" v-bind:value="opt.id" v-model="selectedOptionsList">
+                    <span>{{ opt.text }}</span>
+                </label>
+            </div>
+
+            <div style="background: #f9fafb; padding: 14px; border: 1px solid #e5e7eb; margin-top: 15px;">
+                <label style="display:block; margin-bottom: 6px; font-weight: 600; font-size: 13px;">Балл ЕГЭ (для проверки поступления):</label>
+                <input type="number" v-model="userEge" placeholder="Например: 275" style="margin-bottom: 0;">
+            </div>
+
+            <button class="btn-action" style="margin-top: 16px;" v-on:click="submitTest">Рассчитать результаты</button>
+        </div>
+
+        <div v-if="trajectoryResult != null" class="card">
+            <h2 style="font-size: 18px; color: var(--primary); margin-top: 0;">Ваши результаты</h2>
+            <p style="font-size: 15px;">Основное направление: <strong>{{ trajectoryResult.recommendedProfession.title }}</strong></p>
+            <p class="text-muted">{{ trajectoryResult.recommendedProfession.description }}</p>
+
+            <h3 style="font-size: 15px; margin: 20px 0 8px 0; border-bottom: 1px solid var(--border); padding-bottom: 4px;">Где этому учат:</h3>
+            <div v-for="prog in trajectoryResult.suitableEducationalPrograms" v-bind:key="prog.id" class="inner-block">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                    <div>
+                        <strong>{{ prog.university }} (г. {{ prog.city }}) — {{ prog.program_title }}</strong>
+                    </div>
+                    <div style="display: flex; gap: 8px;">
+                        <span v-if="prog.passesByScore == true" class="badge badge-success">Баллов хватит</span>
+                        <span v-if="prog.passesByScore == false" class="badge badge-danger">Мало баллов</span>
+                        <button v-if="user != null" class="btn-outline" v-on:click="toggleFavorite(prog.id)">
+                            <span v-if="isFavorite(prog.id)">В избранном</span>
+                            <span v-if="!isFavorite(prog.id)">Сохранить</span>
+                        </button>
+                    </div>
+                </div>
+                <div class="text-muted">Проходной балл: {{ prog.passing_score }} | Экзамены: {{ prog.ege_requirements }}</div>
+            </div>
+
+            <button class="btn-action" style="margin-top: 20px;" v-on:click="resetTest">Пройти тест еще раз</button>
+        </div>
+    </div>
+
+    <div v-if="currentTab === 'account'">
+        <div v-if="user == null" class="card" style="max-width: 450px; margin: 0 auto;">
+            <h2 style="font-size: 18px; margin-top: 0; margin-bottom: 15px;">
+                <span v-if="isLoginMode">Вход в личный кабинет</span>
+                <span v-if="!isLoginMode">Регистрация</span>
+            </h2>
+
+            <input v-if="!isLoginMode" type="text" v-model="authName" placeholder="Ваше имя">
+            <input type="email" v-model="authEmail" placeholder="Email">
+            <input type="password" v-model="authPassword" placeholder="Пароль">
+
+            <button class="btn-action" v-if="isLoginMode" v-on:click="loginUser">Войти</button>
+            <button class="btn-action" v-if="!isLoginMode" v-on:click="registerUser">Зарегистрироваться</button>
+
+            <div style="margin-top: 15px; font-size: 13px;">
+                <span v-if="isLoginMode">Нет аккаунта? <button class="btn-link" v-on:click="isLoginMode = false">Создать</button></span>
+                <span v-if="!isLoginMode">Уже есть аккаунт? <button class="btn-link" v-on:click="isLoginMode = true">Войти</button></span>
+            </div>
+        </div>
+
+        <div v-if="user != null" class="grid-2">
+            <div class="card">
+                <h2 style="font-size: 18px; margin-top: 0; margin-bottom: 15px;">Избранные программы вузов</h2>
+                <div v-if="favoritePrograms.length == 0" class="text-muted">Ещё не добавлено</div>
+
+                <div v-for="prog in favoritePrograms" v-bind:key="prog.id" class="inner-block">
+                    <div style="display: flex; justify-content: space-between; align-items: baseline;">
+                        <strong style="font-size: 14px;">{{ prog.title }}</strong>
+                        <button class="btn-outline" v-on:click="toggleFavorite(prog.id)">Убрать</button>
+                    </div>
+                    <div class="text-muted" style="margin: 4px 0;">{{ prog.university_name }} (г. {{ prog.city }})</div>
+                    <div class="text-muted">Балл: {{ prog.passing_score }} | Экзамены: {{ prog.ege_requirements }}</div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2 style="font-size: 18px; margin-top: 0; margin-bottom: 15px;">Избранные профессии</h2>
+                <div v-if="favoriteProfessions.length == 0" class="text-muted">Ещё не добавлено</div>
+
+                <div v-for="prof in favoriteProfessions" v-bind:key="prof.id" class="inner-block">
+                    <div style="display: flex; justify-content: space-between; align-items: baseline;">
+                        <strong style="font-size: 14px; cursor: pointer; text-decoration: underline; color: var(--primary);" v-on:click="showProfFromUni(prof.title)">{{ prof.title }}</strong>
+                        <button class="btn-outline" v-on:click="toggleFavoriteProf(prof.id)">Убрать</button>
+                    </div>
+                    <div class="text-success" style="margin-top: 4px;">Зарплата: {{ prof.average_salary }} руб./мес.</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let app = Vue.createApp({
+        data() {
+            return {
+                currentTab: 'professions',
+                professions: [],
+                universities: [],
+                questions: [],
+                searchQuery: '',
+                selectedOptionsList: [],
+                userEge: null,
+                trajectoryResult: null,
+                expandedProfId: null,
+                profDetails: null,
+
+                user: null,
+                isLoginMode: true,
+                authName: '',
+                authEmail: '',
+                authPassword: '',
+
+                favoritePrograms: [],
+                favoriteIds: [],
+                favoriteProfessions: [],
+                favoriteProfIds: []
+            };
+        },
+        mounted() {
+            this.fetchProfessions();
+            this.fetchUniversities();
+            this.fetchQuestions();
+
+            let savedUser = localStorage.getItem('appUser');
+            if (savedUser != null) {
+                this.user = JSON.parse(savedUser);
+                this.loadFavorites();
+            }
+        },
+        methods: {
+            async fetchProfessions() {
+                let url = '/api/student/professions?search=' + this.searchQuery;
+                let response = await fetch(url);
+                this.professions = await response.json();
+            },
+            async fetchUniversities() {
+                let response = await fetch('/api/student/universities');
+                this.universities = await response.json();
+            },
+            async fetchQuestions() {
+                let response = await fetch('/api/student/test-questions');
+                this.questions = await response.json();
+            },
+            async toggleDetails(id) {
+                if (this.expandedProfId == id) {
+                    this.expandedProfId = null;
+                    this.profDetails = null;
+                } else {
+                    this.expandedProfId = id;
+                    let response = await fetch('/api/student/professions/' + id);
+                    this.profDetails = await response.json();
+                }
+            },
+            showProfFromUni(targetProfTitle) {
+                this.currentTab = 'professions';
+                this.searchQuery = targetProfTitle;
+                this.fetchProfessions();
+            },
+            async submitTest() {
+                if (this.selectedOptionsList.length == 0) {
+                    alert('Выберите хотя бы один ответ');
+                    return;
+                }
+
+                let sendData = {
+                    selectedOptionIds: this.selectedOptionsList,
+                    totalEgeScore: this.userEge
+                };
+
+                let response = await fetch('/api/student/career-trajectory', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(sendData)
+                });
+
+                let data = await response.json();
+                this.trajectoryResult = data.trajectory;
+            },
+            resetTest() {
+                this.trajectoryResult = null;
+                this.selectedOptionsList = [];
+                this.userEge = null;
+            },
+
+            async registerUser() {
+                let sendData = {
+                    name: this.authName,
+                    email: this.authEmail,
+                    password: this.authPassword
+                };
+                let response = await fetch('/api/auth/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(sendData)
+                });
+
+                let data = await response.json();
+                if (data.error) {
+                    alert(data.error);
+                } else {
+                    alert('Регистрация прошла успешно, теперь войдите');
+                    this.isLoginMode = true;
+                }
+            },
+            async loginUser() {
+                let sendData = {
+                    email: this.authEmail,
+                    password: this.authPassword
+                };
+                let response = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(sendData)
+                });
+
+                let data = await response.json();
+                if (data.error) {
+                    alert(data.error);
+                } else {
+                    this.user = data.user;
+                    localStorage.setItem('appUser', JSON.stringify(data.user));
+                    this.loadFavorites();
+                }
+            },
+            logout() {
+                this.user = null;
+                this.favoritePrograms = [];
+                this.favoriteIds = [];
+                this.favoriteProfessions = [];
+                this.favoriteProfIds = [];
+                localStorage.removeItem('appUser');
+            },
+            async loadFavorites() {
+                if (this.user == null) return;
+
+                // грузим программы
+                let progRes = await fetch('/api/student/favorite-programs/' + this.user.id);
+                this.favoritePrograms = await progRes.json();
+
+                this.favoriteIds = [];
+                for (let i = 0; i < this.favoritePrograms.length; i++) {
+                    this.favoriteIds.push(this.favoritePrograms[i].id);
+                }
+
+                // грузим профессии
+                let profRes = await fetch('/api/student/favorite-professions/' + this.user.id);
+                this.favoriteProfessions = await profRes.json();
+
+                this.favoriteProfIds = [];
+                for (let i = 0; i < this.favoriteProfessions.length; i++) {
+                    this.favoriteProfIds.push(this.favoriteProfessions[i].id);
+                }
+            },
+            isFavorite(programId) {
+                return this.favoriteIds.includes(programId);
+            },
+            async toggleFavorite(programId) {
+                let url = '/api/student/favorite-programs';
+                if (this.isFavorite(programId)) {
+                    url = '/api/student/favorite-programs/remove';
+                }
+
+                let sendData = {
+                    userId: this.user.id,
+                    programId: programId
+                };
+
+                await fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(sendData)
+                });
+
+                this.loadFavorites();
+            },
+            isFavoriteProf(profId) {
+                return this.favoriteProfIds.includes(profId);
+            },
+            async toggleFavoriteProf(profId) {
+                let url = '/api/student/favorite-professions';
+                if (this.isFavoriteProf(profId)) {
+                    url = '/api/student/favorite-professions/remove';
+                }
+
+                let sendData = {
+                    userId: this.user.id,
+                    professionId: profId
+                };
+
+                await fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(sendData)
+                });
+
+                this.loadFavorites();
+            }
+        }
+    });
+
+    app.mount('#app');
+</script>
+</body>
+</html>
